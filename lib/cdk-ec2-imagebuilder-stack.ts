@@ -127,8 +127,8 @@ export class CdkEc2ImageBuilderStack extends Stack {
           region: this.region,
           amiDistributionConfiguration: {
             amiTags: {
-              Name: 'CustomAmazonLinux-AMI',
-              Description: 'Custom Amazon Linux AMI with Apache and PHP',
+              Name: ResourceName,
+              Description: 'Amazon Linux AMI with Apache and PHP',
             },
           },
         },
