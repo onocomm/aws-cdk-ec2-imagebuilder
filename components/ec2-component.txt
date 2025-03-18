@@ -1,0 +1,188 @@
+name: Apache Config
+description: This is Apache Config testing document.
+schemaVersion: 1.0
+phases:
+  - 
+    name: build
+    steps:
+      -
+        name: InstallLinuxUpdate
+        action: UpdateOS
+      -
+        name: InstallUtil
+        action: ExecuteBash
+        inputs:
+          commands:
+            - dnf install -y rsyslog && sudo systemctl enable rsyslog
+            - dnf install -y cronie && sudo systemctl enable cronie
+            - dnf install -y postfix && sudo systemctl enable postfix
+      -
+        name: TimeZoneSet
+        action: ExecuteBash
+        inputs:
+          commands:
+            - sudo timedatectl set-timezone Asia/Tokyo
+      -
+        name: SwapSet
+        action: ExecuteBash
+        inputs:
+          commands:
+            - sudo dd if=/dev/zero of=/swapfile1 bs=1M count=512
+            - sudo chmod 600 /swapfile1
+            - sudo mkswap /swapfile1
+            - sudo swapon /swapfile1
+            - sudo echo "/swapfile1 swap swap defaults 0 0" >> /etc/fstab
+      -
+        name: SESRelaySetting
+        action: ExecuteBash
+        inputs:
+          commands:
+            - sudo postconf -e "relayhost = [email-smtp.ap-northeast-1.amazonaws.com]:587" "smtp_sasl_auth_enable = yes" "smtp_sasl_security_options = noanonymous" "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd" "smtp_use_tls = yes" "smtp_tls_security_level = encrypt" "smtp_tls_note_starttls_offer = yes"
+            - sudo echo "[email-smtp.ap-northeast-1.amazonaws.com]:587 AKIAQVC6FP2L7RSIFPN5,BP4cKY1yimdM1eRfbpm9N2CROEv7VkMEqTh5TcMU6Z/1" > /etc/postfix/sasl_passwd
+            - sudo postmap hash:/etc/postfix/sasl_passwd
+            - sudo chmod 0600 /etc/postfix/sasl_passwd.db
+            - sudo rm -f /etc/postfix/sasl_passwd
+            - sudo postconf -e 'smtp_tls_CAfile = /etc/ssl/certs/ca-bundle.crt'
+            - sudo systemctl restart postfix
+      -
+        name: InstallApache
+        action: ExecuteBash
+        inputs:
+          commands:
+            - sudo yum -y install httpd
+            - sudo systemctl enable httpd
+      -
+        name: InstallPHP
+        action: ExecuteBash
+        inputs:
+          commands:
+            - sudo dnf install -y php
+            - sudo dnf install -y php-devel
+            - sudo dnf install -y php-fpm
+            - sudo dnf install -y php-mysqlnd
+            - sudo dnf install -y php-json
+            - sudo dnf install -y php-pdo
+            - sudo dnf install -y php-mbstring
+            - sudo dnf install -y php-pdo
+            - sudo dnf install -y php-gd
+            - sudo dnf install -y php-bcmath
+            - sudo dnf install -y php-dba
+            - sudo dnf install -y php-dbg
+            - sudo dnf install -y php-embedded
+            - sudo dnf install -y php-enchant
+            - sudo dnf install -y php-gmp
+            - sudo dnf install -y php-intl
+            - sudo dnf install -y php-ldap
+            - sudo dnf install -y php-odbc
+            - sudo dnf install -y php-opcache
+            - sudo dnf install -y php-process
+            - sudo dnf install -y php-soap
+            - sudo dnf install -y php-xml
+      -
+        name: WriteHttpdConfig
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |
+              sudo cat > /etc/httpd/conf/httpd.conf << 'EOF'
+              ServerRoot "/etc/httpd"
+              Listen 80
+              Include conf.modules.d/*.conf
+              User apache
+              Group apache
+              ServerAdmin root@localhost
+              <Directory />
+                  AllowOverride none
+                  Require all denied
+              </Directory>
+              DocumentRoot "/var/www/html"
+              <Directory "/var/www">
+                  AllowOverride None
+                  Require all granted
+              </Directory>
+              <Directory "/var/www/html">
+                  Options Indexes FollowSymLinks
+                  AllowOverride None
+                  Require all granted
+              </Directory>
+              <IfModule dir_module>
+                  DirectoryIndex index.html
+              </IfModule>
+              <Files ".ht*">
+                  Require all denied
+              </Files>
+              ErrorLog "logs/error_log"
+              LogLevel warn
+              <IfModule log_config_module>
+                  LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+                  LogFormat "%h %l %u %t \"%r\" %>s %b" common
+                  <IfModule logio_module>
+                    LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio
+                  </IfModule>
+                  CustomLog "logs/access_log" combined
+              </IfModule>
+              <IfModule mime_module>
+                  TypesConfig /etc/mime.types
+                  AddType application/x-compress .Z
+                  AddType application/x-gzip .gz .tgz
+              </IfModule>
+              <IfModule mime_magic_module>
+                  MIMEMagicFile conf/magic
+              </IfModule>
+              EnableSendfile on
+              <IfModule mod_http2.c>
+                  Protocols h2 h2c http/1.1
+              </IfModule>
+              IncludeOptional conf.d/*.conf
+              EOF
+      -
+        name: WriteMpmConfig
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |
+              sudo cat > /etc/httpd/conf.modules.d/00-mpm.conf << 'EOF'
+              LoadModule mpm_event_module modules/mod_mpm_event.so
+              EOF
+      -
+        name: WritePhpConfig
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |
+              sudo cat > /etc/httpd/conf.modules.d/15-php.conf << 'EOF'
+              <IfModule !mod_php5.c>
+                  <IfModule prefork.c>
+                      LoadModule php7_module modules/libphp7.so
+                  </IfModule>
+              </IfModule>
+              <IfModule !mod_php5.c>
+                <IfModule !prefork.c>
+                  <FilesMatch \.php$>
+                    SetHandler "proxy:unix:/run/php-fpm/www.sock|fcgi://localhost"
+                  </FilesMatch>
+                </IfModule>
+              </IfModule>
+              EOF
+      -
+        name: WriteHtmlSample
+        action: ExecuteBash
+        inputs:
+          commands:
+            - sudo echo "<html><body><h1>Hello from EC2 Image Builder!</h1></body></html>" > /var/www/html/index.html
+      -
+        name: StartApache
+        action: ExecuteBash
+        inputs:
+          commands:
+            - sudo systemctl start httpd
+      -
+        name: CloudWatchSet
+        action: ExecuteBash
+        inputs:
+          commands:
+            - |-
+              Token=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+            - |-
+              InstanceID=$(curl -s -H "X-aws-ec2-metadata-token: ${Token}" http://169.254.169.254/latest/meta-data/instance-id)
+            - sudo aws ssm send-command --document-name "AmazonCloudWatch-ManageAgent" --targets "Key=instanceids,Values=${InstanceID}" --parameters "action=configure, mode=ec2, optionalConfigurationSource=ssm, optionalConfigurationLocation=Linux, optionalRestart=no" --timeout-seconds 600 --max-concurrency "50" --max-errors "0" --region ap-northeast-1
