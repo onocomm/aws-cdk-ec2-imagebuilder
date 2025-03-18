@@ -9,6 +9,8 @@ import { Construct } from 'constructs';
 // カスタムプロパティの型を定義
 interface CdkStackProps extends StackProps {
   ResourceName: string;
+  ImageCreate: boolean;
+  VpcId : string;
 }
 
 export class CdkEc2ImageBuilderStack extends Stack {
@@ -20,7 +22,11 @@ export class CdkEc2ImageBuilderStack extends Stack {
       throw new Error('props is required for CdkEc2Stack');
     }
     
-    const { ResourceName } = props;
+    const {
+      ResourceName,
+      ImageCreate,
+      VpcId,
+    } = props;
     
     // ----------コンポーネント設定----------
 
@@ -56,10 +62,8 @@ export class CdkEc2ImageBuilderStack extends Stack {
       roles: [imageBuilderRole.roleName],
     });
 
-    // ✅ デフォルト VPC を取得
-    const vpc = ec2.Vpc.fromLookup(this, 'DefaultVPC', {
-      isDefault: true, // ✅ デフォルト VPC を取得
-    });
+    // ✅ VPCを取得
+    const vpc = ec2.Vpc.fromLookup(this, 'ImportedVpc', (VpcId === 'default') ? { isDefault: true } : { vpcId: VpcId } );
 
     // ✅ 任意のサブネットを取得（パブリックサブネット）
     const subnet = vpc.selectSubnets({ subnetType: ec2.SubnetType.PUBLIC }).subnetIds[0];
@@ -150,22 +154,25 @@ export class CdkEc2ImageBuilderStack extends Stack {
 
     // ----------イメージ作成----------
 
-    // ✅ AMIを作成するためのイメージを作成
-    const image = new imagebuilder.CfnImage(this, 'Image', {
-      infrastructureConfigurationArn: infrastructureConfiguration.attrArn,
-      distributionConfigurationArn: distributionConfiguration.attrArn,
-      imageRecipeArn: recipe.attrArn,
-      imageTestsConfiguration,
-      tags: {
-        Name: ResourceName,
-      },
-    });
+    // ✅ AMIを作成するかどうかを判定
+    if(ImageCreate){
 
-    new CfnOutput(this, 'AMI', {
-      value: image.attrImageId,
-      description: 'AMIの詳細',
-    });
+      // ✅ AMIを作成するためのイメージを作成
+      const image = new imagebuilder.CfnImage(this, 'Image', {
+        infrastructureConfigurationArn: infrastructureConfiguration.attrArn,
+        distributionConfigurationArn: distributionConfiguration.attrArn,
+        imageRecipeArn: recipe.attrArn,
+        imageTestsConfiguration,
+        tags: {
+          Name: ResourceName,
+        },
+      });
 
+      new CfnOutput(this, 'AMI', {
+        value: image.attrImageId,
+        description: 'AMIの詳細',
+      });
+    }
 
   }
 }
