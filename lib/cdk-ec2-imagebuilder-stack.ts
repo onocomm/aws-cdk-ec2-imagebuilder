@@ -147,9 +147,9 @@ export class CdkEc2ImageBuilderStack extends Stack {
 
     // AMIを作成するためのイメージを作成
     const image = new imagebuilder.CfnImage(this, 'Image', {
-      imageRecipeArn: recipe.attrArn,
       infrastructureConfigurationArn: infrastructureConfiguration.attrArn,
       distributionConfigurationArn: distributionConfiguration.attrArn,
+      imageRecipeArn: recipe.attrArn,
       imageTestsConfiguration,
       tags: {
         Name: ResourceName,
