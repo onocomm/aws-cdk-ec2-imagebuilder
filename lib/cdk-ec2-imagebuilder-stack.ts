@@ -152,6 +152,11 @@ export class CdkEc2ImageBuilderStack extends Stack {
       imageTestsConfiguration,
     });
 
+    new CfnOutput(this, 'Pipeline', {
+      value: pipeline.attrArn,
+      description: 'Pipelineの詳細',
+    });
+
     // ----------イメージ作成----------
 
     // ✅ AMIを作成するかどうかを判定
