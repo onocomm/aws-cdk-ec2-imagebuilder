@@ -152,7 +152,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
       imageTestsConfiguration,
     });
 
-    new CfnOutput(this, 'Pipeline', {
+    new CfnOutput(this, 'ResultPipeline', {
       value: pipeline.attrArn,
       description: 'Pipelineの詳細',
     });
@@ -173,7 +173,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
         },
       });
 
-      new CfnOutput(this, 'AMI', {
+      new CfnOutput(this, 'ResultAMI', {
         value: image.attrImageId,
         description: 'AMIの詳細',
       });
