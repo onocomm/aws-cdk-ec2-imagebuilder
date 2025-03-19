@@ -10,6 +10,7 @@ new CdkEc2ImageBuilderStack(app, 'CdkEc2ImageBuilderStack', {
   VpcId: 'default',
   SESCredentials: 'SESCredentials20250319',
   Architecture: 'arm64',
+  AdminUserCreate: true,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,

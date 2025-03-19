@@ -219,44 +219,49 @@ phases:
         inputs:
           commands:
             - |
-              # ✅ admin ユーザーの作成
-              sudo useradd -m -s /bin/bash admin
-              sudo usermod -aG wheel admin  # ✅ sudo グループに追加
-              echo "✅ admin ユーザーを作成し、sudo グループに追加しました"
-              # ✅ admin ユーザーにパスワードなしで sudo 実行を許可
-              echo "admin ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/admin
-              sudo chmod 440 /etc/sudoers.d/admin
-              echo "✅ admin ユーザーにパスワードなしで sudo を許可しました"
-              # ✅ SSH ディレクトリの作成
-              sudo mkdir -p /home/admin/.ssh
-              sudo chmod 700 /home/admin/.ssh
-              # ✅ SSH キーペアを作成（秘密鍵: id_rsa, 公開鍵: id_rsa.pub）
-              sudo ssh-keygen -t rsa -b 4096 -C "admin@${ResourceName}" -f /home/admin/.ssh/id_rsa -N ""
-              echo "✅ SSH キーペアを作成しました"
-              # ✅ 公開鍵を `authorized_keys` に追加（秘密鍵は保存せず）
-              sudo cat /home/admin/.ssh/id_rsa.pub | sudo tee /home/admin/.ssh/authorized_keys
-              sudo chmod 600 /home/admin/.ssh/authorized_keys
-              sudo chown -R admin:admin /home/admin/.ssh
-              echo "✅ admin ユーザーの authorized_keys に公開鍵を追加しました"
-              # ✅ ImageBuilder のバージョン情報を取得
-              RESOURCE_NAME_LOWER=$(echo "${ResourceName}" | tr '[:upper:]' '[:lower:]')
-              IMAGE_ARN=$(aws imagebuilder list-image-pipeline-images \
-                --image-pipeline-arn arn:aws:imagebuilder:${Region}:${Account}:image-pipeline/${RESOURCE_NAME_LOWER} \
-                --region ${Region} \
-                --query "sort_by(imageSummaryList, &dateCreated)[-1].Arn" \
-                --output text)
-              IMAGE_VERSION=$(echo "$IMAGE_ARN" | awk -F'/' '{print $(NF-1) "/" $NF}')
-              # ✅ `1.0.0/3` を `1-0-0-3` に変換
-              SECRET_VERSION=$(echo "$IMAGE_VERSION" | sed 's/\./-/g' | sed 's/\//-/g')
-              # ✅ Secret Manager に秘密鍵を保存（EC2 内には残さない）
-              SECRET_NAME="${ResourceName}AdminUserCredential-${SECRET_VERSION}"
-              SECRET_VALUE=$(sudo cat /home/admin/.ssh/id_rsa | base64 -w 0)
-              # ✅ Secret Manager に保存
-              aws secretsmanager create-secret --name "$SECRET_NAME" \
-                --description "SSH private key for admin user - Created for ImageBuilder Version ${IMAGE_VERSION}" \
-                --secret-string "$SECRET_VALUE" \
-                --region ${Region}
-              echo "✅ Secret Manager に admin ユーザーの秘密鍵を ${SECRET_NAME} として保存しました"
-              # ✅ EC2 内から秘密鍵を完全削除
-              sudo shred -u /home/admin/.ssh/id_rsa  # ✅ 復元不可能なように削除
-              echo "✅ EC2 内から秘密鍵を削除しました"
+              if [ "${AdminUserCreate}" = "true" ]; then
+                echo "✅ Admin ユーザーを作成します"
+                # ✅ admin ユーザーの作成
+                sudo useradd -m -s /bin/bash admin
+                sudo usermod -aG wheel admin  # ✅ sudo グループに追加
+                echo "✅ admin ユーザーを作成し、sudo グループに追加しました"
+                # ✅ admin ユーザーにパスワードなしで sudo 実行を許可
+                echo "admin ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/admin
+                sudo chmod 440 /etc/sudoers.d/admin
+                echo "✅ admin ユーザーにパスワードなしで sudo を許可しました"
+                # ✅ SSH ディレクトリの作成
+                sudo mkdir -p /home/admin/.ssh
+                sudo chmod 700 /home/admin/.ssh
+                # ✅ SSH キーペアを作成（秘密鍵: id_rsa, 公開鍵: id_rsa.pub）
+                sudo ssh-keygen -t rsa -b 4096 -C "admin@${ResourceName}" -f /home/admin/.ssh/id_rsa -N ""
+                echo "✅ SSH キーペアを作成しました"
+                # ✅ 公開鍵を `authorized_keys` に追加（秘密鍵は保存せず）
+                sudo cat /home/admin/.ssh/id_rsa.pub | sudo tee /home/admin/.ssh/authorized_keys
+                sudo chmod 600 /home/admin/.ssh/authorized_keys
+                sudo chown -R admin:admin /home/admin/.ssh
+                echo "✅ admin ユーザーの authorized_keys に公開鍵を追加しました"
+                # ✅ ImageBuilder のバージョン情報を取得
+                RESOURCE_NAME_LOWER=$(echo "${ResourceName}" | tr '[:upper:]' '[:lower:]')
+                IMAGE_ARN=$(aws imagebuilder list-image-pipeline-images \
+                  --image-pipeline-arn arn:aws:imagebuilder:${Region}:${Account}:image-pipeline/${RESOURCE_NAME_LOWER} \
+                  --region ${Region} \
+                  --query "sort_by(imageSummaryList, &dateCreated)[-1].Arn" \
+                  --output text)
+                IMAGE_VERSION=$(echo "$IMAGE_ARN" | awk -F'/' '{print $(NF-1) "/" $NF}')
+                # ✅ `1.0.0/3` を `1-0-0-3` に変換
+                SECRET_VERSION=$(echo "$IMAGE_VERSION" | sed 's/\./-/g' | sed 's/\//-/g')
+                # ✅ Secret Manager に秘密鍵を保存（EC2 内には残さない）
+                SECRET_NAME="${ResourceName}AdminUserCredential-${SECRET_VERSION}"
+                SECRET_VALUE=$(sudo cat /home/admin/.ssh/id_rsa | base64 -w 0)
+                # ✅ Secret Manager に保存
+                aws secretsmanager create-secret --name "$SECRET_NAME" \
+                  --description "SSH private key for admin user - Created for ImageBuilder Version ${IMAGE_VERSION}" \
+                  --secret-string "$SECRET_VALUE" \
+                  --region ${Region}
+                echo "✅ Secret Manager に admin ユーザーの秘密鍵を ${SECRET_NAME} として保存しました"
+                # ✅ EC2 内から秘密鍵を完全削除
+                sudo shred -u /home/admin/.ssh/id_rsa  # ✅ 復元不可能なように削除
+                echo "✅ EC2 内から秘密鍵を削除しました"
+              else
+                echo "⚠️ Admin ユーザー作成はスキップされました"
+              fi
