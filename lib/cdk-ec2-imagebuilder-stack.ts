@@ -14,6 +14,7 @@ interface CdkStackProps extends StackProps {
   ImageCreate: boolean;
   VpcId : string;
   SESCredentials: string;
+  Architecture: string;
 }
 
 export class CdkEc2ImageBuilderStack extends Stack {
@@ -30,6 +31,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
       ImageCreate,
       VpcId,
       SESCredentials,
+      Architecture,
     } = props;
 
     // ----------SSMパラメータ設定----------
@@ -135,7 +137,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
     const recipe = new imagebuilder.CfnImageRecipe(this, 'Recipe', {
       name: ResourceName,
       version: '1.0.0',
-      parentImage: `arn:aws:imagebuilder:${this.region}:aws:image/amazon-linux-2023-arm64/x.x.x`, // Amazon Linux 2 AMI ID for ap-northeast-1
+      parentImage: `arn:aws:imagebuilder:${this.region}:aws:image/amazon-linux-2023-${Architecture}/x.x.x`, // Amazon Linux 2 AMI ID for ap-northeast-1
       components: [
         // ビルドコンポーネント（指定された順序で追加）
         {
