@@ -242,7 +242,7 @@ phases:
                 echo "✅ admin ユーザーの authorized_keys に公開鍵を追加しました"
                 # ✅ ImageBuilder のバージョン情報を取得
                 RESOURCE_NAME_LOWER=$(echo "${ResourceName}" | tr '[:upper:]' '[:lower:]')
-                IMAGE_ARN=$(aws imagebuilder list-image-pipeline-images \
+                IMAGE_VERSION=$(aws imagebuilder list-image-pipeline-images \
                   --image-pipeline-arn arn:aws:imagebuilder:${Region}:${Account}:image-pipeline/${RESOURCE_NAME_LOWER} \
                   --region ${Region} \
                   --query "sort_by(imageSummaryList, &dateCreated)[-1].version" \
