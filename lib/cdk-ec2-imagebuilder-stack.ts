@@ -101,6 +101,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMFullAccess'),
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonS3ReadOnlyAccess'),
         iam.ManagedPolicy.fromAwsManagedPolicyName('SecretsManagerReadWrite'),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('AWSImageBuilderReadOnlyAccess'),
       ],
     });
     
