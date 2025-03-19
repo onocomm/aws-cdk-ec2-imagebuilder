@@ -11,7 +11,7 @@ if (!config) {
   throw new Error(`Environment ${envName} is not defined in cdk.json`);
 }
 
-new CdkEc2ImageBuilderStack(app, 'CdkEc2ImageBuilderStack', {
+new CdkEc2ImageBuilderStack(app, `CdkEc2ImageBuilderStac-${config.ResourceName}-${envName}`, {
   ...config,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
