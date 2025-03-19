@@ -43,28 +43,34 @@ phases:
               #   --description "SES Credentials for postfix relay" \
               #   --secret-string '{"SESEndpoint": "email-smtp.ap-northeast-1.amazonaws.com", "SESAccessKey": "xxxx", "SESSecretKey": "xxxx"}' \
               #   --region ap-northeast-1
-              # Secrets Manager から SES の認証情報を取得
-              SECRET_JSON=$(aws secretsmanager get-secret-value --secret-id SESCredentials --query SecretString --output text --region ${Region})
-              # JSON から値を抽出
-              SESEndpoint=$(echo $SECRET_JSON | jq -r '.SESEndpoint')
-              SESAccessKey=$(echo $SECRET_JSON | jq -r '.SESAccessKey')
-              SESSecretKey=$(echo $SECRET_JSON | jq -r '.SESSecretKey')
-              # Postfix の設定に適用
-              sudo postconf -e "relayhost = [${SESEndpoint}]:587"
-              sudo postconf -e "smtp_sasl_auth_enable = yes"
-              sudo postconf -e "smtp_sasl_security_options = noanonymous"
-              sudo postconf -e "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd"
-              sudo postconf -e "smtp_use_tls = yes"
-              sudo postconf -e "smtp_tls_security_level = encrypt"
-              sudo postconf -e "smtp_tls_note_starttls_offer = yes"
-              # 認証情報の保存
-              echo "[${SESEndpoint}]:587 ${SESAccessKey}:${SESSecretKey}" | sudo tee /etc/postfix/sasl_passwd > /dev/null
-              sudo postmap hash:/etc/postfix/sasl_passwd
-              sudo chmod 0600 /etc/postfix/sasl_passwd.db
-              sudo rm -f /etc/postfix/sasl_passwd
-              # 証明書の設定と Postfix の再起動
-              sudo postconf -e 'smtp_tls_CAfile = /etc/ssl/certs/ca-bundle.crt'
-              sudo systemctl restart postfix
+              # ✅ Secrets Manager に `SESCredentials` が存在するか確認
+              if aws secretsmanager describe-secret --secret-id ${SESCredentials} --region ${Region} > /dev/null 2>&1; then
+                echo "✅ SESCredentials が存在するため、設定を適用します。"
+                # ✅ Secrets Manager から SES の認証情報を取得
+                SECRET_JSON=$(aws secretsmanager get-secret-value --secret-id ${SESCredentials} --query SecretString --output text --region ${Region})
+                # ✅ JSON から値を抽出
+                SESEndpoint=$(echo $SECRET_JSON | jq -r '.SESEndpoint')
+                SESAccessKey=$(echo $SECRET_JSON | jq -r '.SESAccessKey')
+                SESSecretKey=$(echo $SECRET_JSON | jq -r '.SESSecretKey')
+                # ✅ Postfix の設定に適用
+                sudo postconf -e "relayhost = [${SESEndpoint}]:587"
+                sudo postconf -e "smtp_sasl_auth_enable = yes"
+                sudo postconf -e "smtp_sasl_security_options = noanonymous"
+                sudo postconf -e "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd"
+                sudo postconf -e "smtp_use_tls = yes"
+                sudo postconf -e "smtp_tls_security_level = encrypt"
+                sudo postconf -e "smtp_tls_note_starttls_offer = yes"
+                # ✅ 認証情報の保存
+                echo "[${SESEndpoint}]:587 ${SESAccessKey}:${SESSecretKey}" | sudo tee /etc/postfix/sasl_passwd > /dev/null
+                sudo postmap hash:/etc/postfix/sasl_passwd
+                sudo chmod 0600 /etc/postfix/sasl_passwd.db
+                sudo rm -f /etc/postfix/sasl_passwd
+                # ✅ 証明書の設定と Postfix の再起動
+                sudo postconf -e 'smtp_tls_CAfile = /etc/ssl/certs/ca-bundle.crt'
+                sudo systemctl restart postfix
+              else
+                echo "⚠️ ${SESCredentials} が見つかりません。スキップします。"
+              fi
       -
         name: InstallApache
         action: ExecuteBash

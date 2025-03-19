@@ -13,6 +13,7 @@ interface CdkStackProps extends StackProps {
   ResourceName: string;
   ImageCreate: boolean;
   VpcId : string;
+  SESCredentials: string;
 }
 
 export class CdkEc2ImageBuilderStack extends Stack {
@@ -28,6 +29,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
       ResourceName,
       ImageCreate,
       VpcId,
+      SESCredentials,
     } = props;
 
     // ----------SSMパラメータ設定----------
@@ -35,6 +37,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
     // ✅ パラメータ定義ファイルを読み込む
     const paramData: string = fs.readFileSync(path.join(__dirname, '../components/ssm-parameter.txt'), 'utf8')
       .replace(/\${ResourceName}/g, ResourceName)
+      .replace(/\${SESCredentials}/g, SESCredentials)
       .replace(/\${Region}/g, props.env?.region || 'ap-northeast-1');
 
     // ✅ SSM パラメータを作成
@@ -63,8 +66,9 @@ export class CdkEc2ImageBuilderStack extends Stack {
 
     // ✅ コンポーネント定義ファイルを読み込む
     const componentData: string = fs.readFileSync(path.join(__dirname, '../components/ec2-component.txt'), 'utf8')
-    .replace(/\${ResourceName}/g, ResourceName)
-    .replace(/\${Region}/g, props.env?.region || 'ap-northeast-1');
+      .replace(/\${ResourceName}/g, ResourceName)
+      .replace(/\${SESCredentials}/g, SESCredentials)
+      .replace(/\${Region}/g, props.env?.region || 'ap-northeast-1');
 
     // ✅ ImageBuilder用のコンポーネントを作成
     const component = new imagebuilder.CfnComponent(this, 'InstallComponent', {

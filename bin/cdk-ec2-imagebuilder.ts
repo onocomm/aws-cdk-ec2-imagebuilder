@@ -8,6 +8,7 @@ new CdkEc2ImageBuilderStack(app, 'CdkEc2ImageBuilderStack', {
   ResourceName: 'CdkEC2Image',
   ImageCreate: false,
   VpcId: 'default',
+  SESCredentials: 'SESCredentials',
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION
