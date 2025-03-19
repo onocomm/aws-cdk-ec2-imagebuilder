@@ -135,7 +135,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
     const recipe = new imagebuilder.CfnImageRecipe(this, 'Recipe', {
       name: ResourceName,
       version: '1.0.0',
-      parentImage: `arn:aws:imagebuilder:${this.region}:aws:image/amazon-linux-2023-x86/x.x.x`, // Amazon Linux 2 AMI ID for ap-northeast-1
+      parentImage: `arn:aws:imagebuilder:${this.region}:aws:image/amazon-linux-2023-arm64/x.x.x`, // Amazon Linux 2 AMI ID for ap-northeast-1
       components: [
         // ビルドコンポーネント（指定された順序で追加）
         {
