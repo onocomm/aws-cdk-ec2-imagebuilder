@@ -62,17 +62,11 @@ export class CdkEc2ImageBuilderStack extends Stack {
       `/aws/imagebuilder/${ResourceName}`,
     ]){
       // ✅ 既存の LogGroup を参照し、なければ新規作成
-      try {
-        logs.LogGroup.fromLogGroupName(this, `${logGroupName.replaceAll('/', '')}ExistingLogGroup`, logGroupName);
-        console.log(`✅ CloudWatch LogGroup ${logGroupName} は既に存在します。スキップします。`);
-      } catch (e) {
-        new logs.LogGroup(this, `${logGroupName.replaceAll('/', '')}LogGroup`, {
-          logGroupName: logGroupName,
-          retention: retentionDays,
-          removalPolicy: RemovalPolicy.RETAIN
-        });
-        console.log(`✅ CloudWatch LogGroup ${logGroupName} を作成しました。`);
-      }
+      new logs.LogGroup(this, `${logGroupName.replaceAll('/', '')}LogGroup`, {
+        logGroupName: logGroupName,
+        retention: retentionDays,
+        removalPolicy: RemovalPolicy.RETAIN
+      });
     }
 
     // ----------コンポーネント設定----------
