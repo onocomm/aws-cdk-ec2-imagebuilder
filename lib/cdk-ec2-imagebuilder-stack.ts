@@ -54,14 +54,19 @@ export class CdkEc2ImageBuilderStack extends Stack {
     const retentionDays = logs.RetentionDays.FIVE_YEARS;
 
     // ✅ CloudWatch Logs グループを作成（ファイルごとに設定）
-    for(const logType of ['messages', 'access_log', 'error_log', 'maillog']){
-      const logGroupName = `/${ResourceName}/${logType}`;
+    for(const logGroupName of [
+      `/${ResourceName}/messages`,
+      `/${ResourceName}/access_log`,
+      `/${ResourceName}/error_log`,
+      `/${ResourceName}/maillog`,
+      `/aws/imagebuilder/${ResourceName}`,
+    ]){
       // ✅ 既存の LogGroup を参照し、なければ新規作成
       try {
-        logs.LogGroup.fromLogGroupName(this, `${logType}ExistingLogGroup`, logGroupName);
+        logs.LogGroup.fromLogGroupName(this, `${logGroupName}-ExistingLogGroup`, logGroupName);
         console.log(`✅ CloudWatch LogGroup ${logGroupName} は既に存在します。スキップします。`);
       } catch (e) {
-        new logs.LogGroup(this, `${logType}LogGroup`, {
+        new logs.LogGroup(this, `${logGroupName}-LogGroup`, {
           logGroupName: logGroupName,
           retention: retentionDays,
           removalPolicy: RemovalPolicy.RETAIN
