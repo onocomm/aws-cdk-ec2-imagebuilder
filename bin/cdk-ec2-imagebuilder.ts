@@ -8,7 +8,7 @@ new CdkEc2ImageBuilderStack(app, 'CdkEc2ImageBuilderStack', {
   ResourceName: 'DessertChouxCom',
   ImageCreate: false,
   VpcId: 'default',
-  SESCredentials: 'SESCredentials',
+  SESCredentials: 'SESCredentials20250319',
   Architecture: 'arm64',
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
