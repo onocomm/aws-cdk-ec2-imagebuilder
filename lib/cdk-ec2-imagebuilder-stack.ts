@@ -22,7 +22,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
 
     // ✅ props が undefined の場合、エラーを回避
     if (!props) {
-      throw new Error('props is required for CdkEc2Stack');
+      throw new Error('props is required for CdkEc2ImageBuilderStack');
     }
     
     const {
