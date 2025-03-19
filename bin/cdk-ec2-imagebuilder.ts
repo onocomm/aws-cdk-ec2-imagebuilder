@@ -18,7 +18,7 @@ const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).t
 const capitalizedEnv = capitalize(envName);
 
 // ResourceName に結合
-config.ResourceName = config.ResourceName + capitalizedEnv;
+config.ResourceName = config.ResourceName + (envName !== 'production' ) ? capitalizedEnv : '';
 
 new CdkEc2ImageBuilderStack(app, `CdkEc2ImageBuilderStack-${config.ResourceName}`, {
   ...config,
