@@ -11,7 +11,14 @@ if (!config) {
   throw new Error(`Environment ${envName} is not defined in cdk.json`);
 }
 
-config.ResourceName = config.ResourceName + envName.toUpperCase();
+// 環境名の先頭を大文字に変換する関数
+const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+// envName を Capitalize（例: "staging" → "Staging"）
+const capitalizedEnv = capitalize(envName);
+
+// ResourceName に結合
+config.ResourceName = config.ResourceName + capitalizedEnv;
 
 new CdkEc2ImageBuilderStack(app, `CdkEc2ImageBuilderStack-${config.ResourceName}`, {
   ...config,
