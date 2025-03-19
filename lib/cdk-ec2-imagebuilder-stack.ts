@@ -40,7 +40,8 @@ export class CdkEc2ImageBuilderStack extends Stack {
     const paramData: string = fs.readFileSync(path.join(__dirname, '../components/ssm-parameter.txt'), 'utf8')
       .replace(/\${ResourceName}/g, ResourceName)
       .replace(/\${SESCredentials}/g, SESCredentials)
-      .replace(/\${Region}/g, props.env?.region || 'ap-northeast-1');
+      .replace(/\${Account}/g, props.env?.account || '')
+      .replace(/\${Region}/g, props.env?.region || '');
 
     // ✅ SSM パラメータを作成
     new ssm.StringParameter(this, 'CloudWatchAgentConfigParameter', {
@@ -77,7 +78,8 @@ export class CdkEc2ImageBuilderStack extends Stack {
     const componentData: string = fs.readFileSync(path.join(__dirname, '../components/ec2-component.txt'), 'utf8')
       .replace(/\${ResourceName}/g, ResourceName)
       .replace(/\${SESCredentials}/g, SESCredentials)
-      .replace(/\${Region}/g, props.env?.region || 'ap-northeast-1');
+      .replace(/\${Account}/g, props.env?.account || '')
+      .replace(/\${Region}/g, props.env?.region || '');
 
     // ✅ ImageBuilder用のコンポーネントを作成
     const component = new imagebuilder.CfnComponent(this, 'InstallComponent', {

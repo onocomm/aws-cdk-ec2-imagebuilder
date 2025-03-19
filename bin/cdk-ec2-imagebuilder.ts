@@ -5,7 +5,7 @@ import { CdkEc2ImageBuilderStack } from '../lib/cdk-ec2-imagebuilder-stack';
 // AWSアカウントとリージョンを指定
 const app = new cdk.App();
 new CdkEc2ImageBuilderStack(app, 'CdkEc2ImageBuilderStack', {
-  ResourceName: 'DessertChouxCom',
+  ResourceName: 'cdk-ec2-imagebuilder',
   ImageCreate: false,
   VpcId: 'default',
   SESCredentials: 'SESCredentials20250319',
