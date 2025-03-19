@@ -35,7 +35,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
 
     // ✅ ImageBuilder用のコンポーネントを作成
     const component = new imagebuilder.CfnComponent(this, 'InstallComponent', {
-      name: `${ResourceName}Component`,
+      name: ResourceName,
       platform: 'Linux',
       version: '1.0.0',
       data: componentData,
@@ -45,10 +45,9 @@ export class CdkEc2ImageBuilderStack extends Stack {
 
     // ✅ ImageBuilder用のIAMロールを作成
     const imageBuilderRole = new iam.Role(this, 'ImageBuilderRole', {
-      roleName: `${ResourceName}ImageBuilderRole`,
+      roleName: `${ResourceName}EC2ImageBuilder`,
       assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
       managedPolicies: [
-        //iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'),
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'),
         iam.ManagedPolicy.fromAwsManagedPolicyName('EC2InstanceProfileForImageBuilder'),
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMFullAccess'),
@@ -71,14 +70,14 @@ export class CdkEc2ImageBuilderStack extends Stack {
     // ✅ セキュリティグループを作成（名前を指定）
     const securityGroup = new ec2.SecurityGroup(this, 'MySecurityGroup', {
       vpc,
-      securityGroupName: `${props.ResourceName}SecurityGroup`, // ✅ 任意の名前を指定
+      securityGroupName: `${ResourceName}EC2ImageBuilder`, // ✅ 任意の名前を指定
       description: 'Allow EC2 ImageBuilder access',
       allowAllOutbound: true,
     });
 
     // ✅ Image Builder のインフラ設定を作成
     const infrastructureConfiguration = new imagebuilder.CfnInfrastructureConfiguration(this, 'InfraConfig', {
-      name: `${ResourceName}InfrastructureConfiguration`,
+      name: ResourceName,
       instanceProfileName: instanceProfile.ref,
       subnetId: subnet, // ✅ サブネットを指定
       securityGroupIds: [securityGroup.securityGroupId], // ✅ セキュリティグループを指定
@@ -89,7 +88,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
 
     //  ✅ レシピを作成
     const recipe = new imagebuilder.CfnImageRecipe(this, 'Recipe', {
-      name: `${ResourceName}Recipe`,
+      name: ResourceName,
       version: '1.0.0',
       parentImage: `arn:aws:imagebuilder:${this.region}:aws:image/amazon-linux-2023-x86/x.x.x`, // Amazon Linux 2 AMI ID for ap-northeast-1
       components: [
@@ -121,7 +120,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
 
     // ✅ 配布設定
     const distributionConfiguration = new imagebuilder.CfnDistributionConfiguration(this, 'DistributionConfig', {
-      name: `${ResourceName}DistributionConfiguration`,
+      name: ResourceName,
       distributions: [
         {
           region: this.region,
@@ -145,7 +144,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
 
     // ✅ イメージパイプラインを作成
     const pipeline = new imagebuilder.CfnImagePipeline(this, 'Pipeline', {
-      name: `${ResourceName}Pipeline`,
+      name: ResourceName,
       infrastructureConfigurationArn: infrastructureConfiguration.attrArn,
       distributionConfigurationArn: distributionConfiguration.attrArn,
       imageRecipeArn: recipe.attrArn,
