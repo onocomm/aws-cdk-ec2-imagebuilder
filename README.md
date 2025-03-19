@@ -28,6 +28,10 @@
    - SSM Parameter
    - CloudWatch Logs
 
+5. **EC2インスタンス関連**:
+   - SESのリレー設定
+   - adminユーザの作成
+
 ## デプロイ前の準備
 
 1. `components/ec2-component.txt` ファイルのコンポーネント定義をカスタマイズ
