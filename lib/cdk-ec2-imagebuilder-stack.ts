@@ -9,9 +9,6 @@ import { Construct } from 'constructs';
 // カスタムプロパティの型を定義
 interface CdkStackProps extends StackProps {
   ResourceName: string;
-  SESEndpoint: string;
-  SESAccessKey: string;
-  SESSecretKey: string;
   ImageCreate: boolean;
   VpcId : string;
 }
@@ -27,9 +24,6 @@ export class CdkEc2ImageBuilderStack extends Stack {
     
     const {
       ResourceName,
-      SESEndpoint,
-      SESAccessKey,
-      SESSecretKey,
       ImageCreate,
       VpcId,
     } = props;
@@ -39,23 +33,12 @@ export class CdkEc2ImageBuilderStack extends Stack {
     // ✅ コンポーネント定義ファイルを読み込む
     const componentData: string = fs.readFileSync(path.join(__dirname, '../components/ec2-component.txt'), 'utf8');
 
-    const replacements: Record<string ,string> = {
-      '${SESEndpoint}': SESEndpoint,
-      '${SESAccessKey}': SESAccessKey,
-      '${SESSecretKey}': SESSecretKey,
-    };
-    
-    let convertComponentData: string = componentData;
-    for (const key in replacements) {
-      convertComponentData = convertComponentData.replaceAll(key, replacements[key]);
-    }
-
     // ✅ ImageBuilder用のコンポーネントを作成
     const component = new imagebuilder.CfnComponent(this, 'InstallComponent', {
       name: ResourceName,
       platform: 'Linux',
       version: '1.0.0',
-      data: convertComponentData,
+      data: componentData,
     });
 
     // ----------インフラストラクチャー設定----------
