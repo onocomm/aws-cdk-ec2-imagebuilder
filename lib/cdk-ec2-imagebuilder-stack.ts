@@ -15,7 +15,6 @@ interface CdkStackProps extends StackProps {
   VpcId: string;
   SESCredentials: string;
   Architecture: string;
-  AdminUserCreate: boolean;
 }
 
 export class CdkEc2ImageBuilderStack extends Stack {
@@ -33,7 +32,6 @@ export class CdkEc2ImageBuilderStack extends Stack {
       VpcId,
       SESCredentials,
       Architecture,
-      AdminUserCreate,
     } = props;
 
     // ----------SSMパラメータ設定----------
@@ -42,7 +40,6 @@ export class CdkEc2ImageBuilderStack extends Stack {
     const paramData: string = fs.readFileSync(path.join(__dirname, '../components/ssm-parameter.txt'), 'utf8')
       .replace(/\${ResourceName}/g, ResourceName)
       .replace(/\${SESCredentials}/g, SESCredentials)
-      .replace(/\${AdminUserCreate}/g, AdminUserCreate ? 'true' : 'false')
       .replace(/\${Account}/g, props.env?.account || '')
       .replace(/\${Region}/g, props.env?.region || '');
 
@@ -78,7 +75,6 @@ export class CdkEc2ImageBuilderStack extends Stack {
     const componentData: string = fs.readFileSync(path.join(__dirname, '../components/ec2-component.txt'), 'utf8')
       .replace(/\${ResourceName}/g, ResourceName)
       .replace(/\${SESCredentials}/g, SESCredentials)
-      .replace(/\${AdminUserCreate}/g, AdminUserCreate ? 'true' : 'false')
       .replace(/\${Account}/g, props.env?.account || '')
       .replace(/\${Region}/g, props.env?.region || '');
 
