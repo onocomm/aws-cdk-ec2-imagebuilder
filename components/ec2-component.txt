@@ -38,6 +38,11 @@ phases:
         inputs:
           commands:
             - |-
+              # 以下の形式で SES の認証情報を Secrets Manager に保存している
+              # aws secretsmanager create-secret --name SESCredentials \
+              #   --description "SES Credentials for postfix relay" \
+              #   --secret-string '{"SESEndpoint": "email-smtp.ap-northeast-1.amazonaws.com", "SESAccessKey": "xxxx", "SESSecretKey": "xxxx"}' \
+              #   --region ap-northeast-1
               # Secrets Manager から SES の認証情報を取得
               SECRET_JSON=$(aws secretsmanager get-secret-value --secret-id SESCredentials --query SecretString --output text --region ap-northeast-1)
               # JSON から値を抽出
