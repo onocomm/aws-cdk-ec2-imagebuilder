@@ -56,9 +56,6 @@ export class CdkEc2ImageBuilderStack extends Stack {
 
     // ----------CloudWatch Logs設定----------
 
-    // ✅ CloudWatch Logs の保持期間（5年 = 1825日）
-    const retentionDays = logs.RetentionDays.FIVE_YEARS;
-
     // ✅ CloudWatch Logs グループを作成（ファイルごとに設定）
     for(const logGroupName of [
       `/${ResourceName}/messages`,
@@ -70,7 +67,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
       // ✅ 既存の LogGroup を参照し、なければ新規作成
       new logs.LogGroup(this, `${logGroupName.replaceAll('/', '')}LogGroup`, {
         logGroupName: logGroupName,
-        retention: retentionDays,
+        retention: logs.RetentionDays.FIVE_YEARS, // ✅ 5年間のログを保持
         removalPolicy: RemovalPolicy.RETAIN
       });
     }
