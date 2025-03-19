@@ -24,15 +24,21 @@
    - パブリックサブネットを使用
    - アウトバウンド通信を許可するセキュリティグループ
 
+4. **CloudWatchAgent関連**:
+   - SSM Parameter
+   - CloudWatch Logs
+
 ## デプロイ前の準備
 
 1. `components/ec2-component.txt` ファイルのコンポーネント定義をカスタマイズ
-2. 必要に応じて `lib/cdk-ec2-imagebuilder-stack.ts` のリソース名や設定をカスタマイズ
+2. `components/ssm-parameter.txt` CloudWatchAgentの設定をカスタマイズ
+3. 必要に応じて `lib/cdk-ec2-imagebuilder-stack.ts` のリソース名や設定をカスタマイズ
 
 ## デプロイ方法
 
 ```bash
-npm run build   # TypeScriptをJavaScriptにコンパイル
+cdk bootstrap   # CDKの初期セットアップ
+cdk synth       # CloudFormationテンプレートを出力
 cdk deploy      # AWSアカウントにスタックをデプロイ
 ```
 
@@ -49,7 +55,7 @@ cdk deploy      # AWSアカウントにスタックをデプロイ
 
 ## その他のコマンド
 
+* `npm run build`   TypeScriptをJavaScriptにコンパイル
 * `npm run watch`   変更を監視して自動コンパイル
 * `npm run test`    Jestを使用したユニットテストの実行
 * `cdk diff`        デプロイ済みスタックと現在の状態を比較
-* `cdk synth`       CloudFormationテンプレートを出力

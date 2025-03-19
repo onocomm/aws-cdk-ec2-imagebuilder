@@ -44,7 +44,7 @@ phases:
               #   --secret-string '{"SESEndpoint": "email-smtp.ap-northeast-1.amazonaws.com", "SESAccessKey": "xxxx", "SESSecretKey": "xxxx"}' \
               #   --region ap-northeast-1
               # Secrets Manager から SES の認証情報を取得
-              SECRET_JSON=$(aws secretsmanager get-secret-value --secret-id SESCredentials --query SecretString --output text --region ap-northeast-1)
+              SECRET_JSON=$(aws secretsmanager get-secret-value --secret-id SESCredentials --query SecretString --output text --region ${Region})
               # JSON から値を抽出
               SESEndpoint=$(echo $SECRET_JSON | jq -r '.SESEndpoint')
               SESAccessKey=$(echo $SECRET_JSON | jq -r '.SESAccessKey')
@@ -206,4 +206,4 @@ phases:
               Token=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
             - |-
               InstanceID=$(curl -s -H "X-aws-ec2-metadata-token: ${Token}" http://169.254.169.254/latest/meta-data/instance-id)
-            - sudo aws ssm send-command --document-name "AmazonCloudWatch-ManageAgent" --targets "Key=instanceids,Values=${InstanceID}" --parameters "action=configure, mode=ec2, optionalConfigurationSource=ssm, optionalConfigurationLocation=Linux, optionalRestart=no" --timeout-seconds 600 --max-concurrency "50" --max-errors "0" --region ap-northeast-1
+            - sudo aws ssm send-command --document-name "AmazonCloudWatch-ManageAgent" --targets "Key=instanceids,Values=${InstanceID}" --parameters "action=configure, mode=ec2, optionalConfigurationSource=ssm, optionalConfigurationLocation=${ResourceName}EC2ImageBuilder, optionalRestart=no" --timeout-seconds 600 --max-concurrency "50" --max-errors "0" --region ${Region}

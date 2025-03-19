@@ -1,7 +1,9 @@
-import { Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
+import { Stack, StackProps, RemovalPolicy, CfnOutput } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as imagebuilder from 'aws-cdk-lib/aws-imagebuilder';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Construct } from 'constructs';
@@ -27,11 +29,42 @@ export class CdkEc2ImageBuilderStack extends Stack {
       ImageCreate,
       VpcId,
     } = props;
-    
+
+    // ----------SSMパラメータ設定----------
+
+    // ✅ パラメータ定義ファイルを読み込む
+    const paramData: string = fs.readFileSync(path.join(__dirname, '../components/ssm-parameter.txt'), 'utf8')
+      .replace(/\${ResourceName}/g, ResourceName)
+      .replace(/\${Region}/g, props.env?.region || 'ap-northeast-1');
+
+    // ✅ SSM パラメータを作成
+    new ssm.StringParameter(this, 'CloudWatchAgentConfigParameter', {
+      parameterName: `${ResourceName}EC2ImageBuilder`,  // ✅ SSM パラメータのキー
+      stringValue: paramData,        // ✅ ファイルの内容を SSM に保存
+      description: 'CloudWatch Agent Configuration for Postfix Relay',
+      tier: ssm.ParameterTier.STANDARD,
+    });
+
+    // ----------コンポーネント設定----------
+
+    // ✅ CloudWatch Logs の保持期間（5年 = 1825日）
+    const retentionDays = logs.RetentionDays.FIVE_YEARS;
+
+    // ✅ CloudWatch Logs グループを作成（ファイルごとに設定）
+    for(const logType of ['messages', 'access_log', 'error_log', 'maillog']){
+      new logs.LogGroup(this, `${logType}LogGroup`, {
+        logGroupName: `/${ResourceName}/${logType}`,
+        retention: retentionDays,
+        removalPolicy: RemovalPolicy.RETAIN
+      });
+    }
+
     // ----------コンポーネント設定----------
 
     // ✅ コンポーネント定義ファイルを読み込む
-    const componentData: string = fs.readFileSync(path.join(__dirname, '../components/ec2-component.txt'), 'utf8');
+    const componentData: string = fs.readFileSync(path.join(__dirname, '../components/ec2-component.txt'), 'utf8')
+    .replace(/\${ResourceName}/g, ResourceName)
+    .replace(/\${Region}/g, props.env?.region || 'ap-northeast-1');
 
     // ✅ ImageBuilder用のコンポーネントを作成
     const component = new imagebuilder.CfnComponent(this, 'InstallComponent', {
