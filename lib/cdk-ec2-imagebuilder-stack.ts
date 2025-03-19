@@ -12,7 +12,7 @@ import { Construct } from 'constructs';
 interface CdkStackProps extends StackProps {
   ResourceName: string;
   ImageCreate: boolean;
-  VpcId : string;
+  VpcId: string;
   SESCredentials: string;
   Architecture: string;
 }
