@@ -245,7 +245,7 @@ phases:
                 IMAGE_ARN=$(aws imagebuilder list-image-pipeline-images \
                   --image-pipeline-arn arn:aws:imagebuilder:${Region}:${Account}:image-pipeline/${RESOURCE_NAME_LOWER} \
                   --region ${Region} \
-                  --query "sort_by(imageSummaryList, &dateCreated)[-1].Arn" \
+                  --query "sort_by(imageSummaryList, &dateCreated)[-1].arn" \
                   --output text)
                 IMAGE_VERSION=$(echo "$IMAGE_ARN" | awk -F'/' '{print $(NF-1) "/" $NF}')
                 # ✅ `1.0.0/3` を `1-0-0-3` に変換
