@@ -16,7 +16,6 @@ interface CdkStackProps extends StackProps {
   SESCredentials: string;
   Architecture: string;
   AdminUserCreate: boolean;
-  SESEnable: boolean;
 }
 
 export class CdkEc2ImageBuilderStack extends Stack {
@@ -35,7 +34,6 @@ export class CdkEc2ImageBuilderStack extends Stack {
       SESCredentials,
       Architecture,
       AdminUserCreate,
-      SESEnable,
     } = props;
 
     // ----------SSMパラメータ設定----------
@@ -45,7 +43,6 @@ export class CdkEc2ImageBuilderStack extends Stack {
       .replace(/\${ResourceName}/g, ResourceName)
       .replace(/\${SESCredentials}/g, SESCredentials)
       .replace(/\${AdminUserCreate}/g, AdminUserCreate ? 'true' : 'false')
-      .replace(/\${SESEnable}/g, SESEnable ? 'true' : 'false')
       .replace(/\${Account}/g, props.env?.account || '')
       .replace(/\${Region}/g, props.env?.region || '');
 
@@ -87,7 +84,6 @@ export class CdkEc2ImageBuilderStack extends Stack {
       .replace(/\${ResourceName}/g, ResourceName)
       .replace(/\${SESCredentials}/g, SESCredentials)
       .replace(/\${AdminUserCreate}/g, AdminUserCreate ? 'true' : 'false')
-      .replace(/\${SESEnable}/g, SESEnable ? 'true' : 'false')
       .replace(/\${Account}/g, props.env?.account || '')
       .replace(/\${Region}/g, props.env?.region || '');
 
