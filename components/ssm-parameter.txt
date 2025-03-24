@@ -5,19 +5,19 @@
 				"collect_list": [
 					{
 						"file_path": "/var/log/messages",
-						"log_group_name": "linux-server/messages"
+						"log_group_name": "${ResourceName}/messages"
 					},
 					{
 						"file_path": "/var/log/httpd/access_log",
-						"log_group_name": "linux-server/access_log"
+						"log_group_name": "${ResourceName}/access_log"
 					},
 					{
 						"file_path": "/var/log/httpd/error_log",
-						"log_group_name": "linux-server/error_log"
+						"log_group_name": "${ResourceName}/error_log"
 					},
 					{
 						"file_path": "/var/log/maillog",
-						"log_group_name": "linux-server/maillog"
+						"log_group_name": "${ResourceName}/maillog"
 					}
 				]
 			}

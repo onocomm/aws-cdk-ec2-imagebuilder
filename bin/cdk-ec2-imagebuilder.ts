@@ -16,5 +16,6 @@ new CdkEc2ImageBuilderStack(app, `CdkEc2ImageBuilderStack-${config.ResourceName}
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,
+    profile: process.env.AWS_PROFILE,
   }
 });

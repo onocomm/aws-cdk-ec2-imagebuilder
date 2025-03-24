@@ -1,4 +1,4 @@
-import { Stack, StackProps, RemovalPolicy, CfnOutput } from 'aws-cdk-lib';
+import { Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as imagebuilder from 'aws-cdk-lib/aws-imagebuilder';
@@ -7,7 +7,6 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Construct } from 'constructs';
-import { CloudWatchLogsClient, DescribeLogGroupsCommand } from '@aws-sdk/client-cloudwatch-logs';
 
 // カスタムプロパティの型を定義
 interface CdkStackProps extends StackProps {
@@ -31,26 +30,10 @@ export class CdkEc2ImageBuilderStack extends Stack {
     const {
       ResourceName,
       ImageCreate,
-      VpcId,
       SESCredentials,
       Architecture,
       AdminUserCreate,
     } = props;
-
-    // ----------AWS SDKによる存在チェック----------
-
-    // ✅ AWS SDK v3 のクライアントを作成（リージョン指定）
-    const cloudwatchlogsClient = new CloudWatchLogsClient({ region: props.env?.region });
-
-    const logGroupExists = async (logGroupName: string): Promise<boolean> => {
-      try {
-        const command = new DescribeLogGroupsCommand({ logGroupNamePrefix: logGroupName });
-        const response = await cloudwatchlogsClient.send(command);
-        return response.logGroups?.some(group => group.logGroupName === logGroupName) || false;
-      } catch (error) {
-        return false;
-      }
-    };
 
     // ----------CloudWatch Logs設定----------
 
@@ -63,18 +46,12 @@ export class CdkEc2ImageBuilderStack extends Stack {
       `/aws/imagebuilder/${ResourceName}`,
     ]){
 
-      (async ()=>{
-        // ✅ 既存の LogGroup を参照し、なければ新規作成
-        const exists = await logGroupExists(logGroupName);
-        if (!exists) {
-          new logs.LogGroup(this, `${logGroupName.replace(/\//g, '-')}-LogGroup`, {
-            logGroupName: logGroupName,
-            retention: logs.RetentionDays.FIVE_YEARS,
-            removalPolicy: RemovalPolicy.RETAIN,
-          });
-        }
-      })();
-    }
+        new logs.LogGroup(this, `${logGroupName.replace(/\//g, '-')}-LogGroup`, {
+          logGroupName: logGroupName,
+          retention: logs.RetentionDays.FIVE_YEARS,
+        });
+
+      }
     
     // ----------SSMパラメータ設定----------
 
@@ -135,7 +112,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
     });
 
     // ✅ VPCを取得
-    const vpc = ec2.Vpc.fromLookup(this, 'ImportedVpc', (VpcId === 'default') ? { isDefault: true } : { vpcId: VpcId } );
+    const vpc = ec2.Vpc.fromLookup(this, 'ImportedVpc', { isDefault: true } );
 
     // ✅ 任意のサブネットを取得（パブリックサブネット）
     const subnet = vpc.selectSubnets({ subnetType: ec2.SubnetType.PUBLIC }).subnetIds[0];

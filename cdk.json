@@ -20,7 +20,6 @@
     "production": {
       "ResourceName": "cdk-ec2-imagebuilder",
       "ImageCreate": false,
-      "VpcId": "default",
       "Architecture": "arm64",
       "SESCredentials": "SESCredentials20250319",
       "AdminUserCreate": true
