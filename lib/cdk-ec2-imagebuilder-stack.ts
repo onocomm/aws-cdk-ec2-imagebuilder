@@ -7,6 +7,7 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Construct } from 'constructs';
+import { CloudWatchLogsClient, DescribeLogGroupsCommand } from '@aws-sdk/client-cloudwatch-logs';
 
 // カスタムプロパティの型を定義
 interface CdkStackProps extends StackProps {
@@ -36,6 +37,45 @@ export class CdkEc2ImageBuilderStack extends Stack {
       AdminUserCreate,
     } = props;
 
+    // ----------AWS SDKによる存在チェック----------
+
+    // ✅ AWS SDK v3 のクライアントを作成（リージョン指定）
+    const cloudwatchlogsClient = new CloudWatchLogsClient({ region: props.env?.region });
+
+    const logGroupExists = async (logGroupName: string): Promise<boolean> => {
+      try {
+        const command = new DescribeLogGroupsCommand({ logGroupNamePrefix: logGroupName });
+        const response = await cloudwatchlogsClient.send(command);
+        return response.logGroups?.some(group => group.logGroupName === logGroupName) || false;
+      } catch (error) {
+        return false;
+      }
+    };
+
+    // ----------CloudWatch Logs設定----------
+
+    // ✅ CloudWatch Logs グループを作成（ファイルごとに設定）
+    for(const logGroupName of [
+      `/${ResourceName}/messages`,
+      `/${ResourceName}/access_log`,
+      `/${ResourceName}/error_log`,
+      `/${ResourceName}/maillog`,
+      `/aws/imagebuilder/${ResourceName}`,
+    ]){
+
+      (async ()=>{
+        // ✅ 既存の LogGroup を参照し、なければ新規作成
+        const exists = await logGroupExists(logGroupName);
+        if (!exists) {
+          new logs.LogGroup(this, `${logGroupName.replace(/\//g, '-')}-LogGroup`, {
+            logGroupName: logGroupName,
+            retention: logs.RetentionDays.FIVE_YEARS,
+            removalPolicy: RemovalPolicy.RETAIN,
+          });
+        }
+      })();
+    }
+    
     // ----------SSMパラメータ設定----------
 
     // ✅ パラメータ定義ファイルを読み込む
@@ -53,29 +93,6 @@ export class CdkEc2ImageBuilderStack extends Stack {
       description: 'CloudWatch Agent Configuration for Postfix Relay',
       tier: ssm.ParameterTier.STANDARD,
     });
-
-    // ----------CloudWatch Logs設定----------
-
-    // ✅ CloudWatch Logs グループを作成（ファイルごとに設定）
-    for(const logGroupName of [
-      `/${ResourceName}/messages`,
-      `/${ResourceName}/access_log`,
-      `/${ResourceName}/error_log`,
-      `/${ResourceName}/maillog`,
-      `/aws/imagebuilder/${ResourceName}`,
-    ]){
-
-      // ✅ 既存の LogGroup を参照し、なければ新規作成
-      try {
-        logs.LogGroup.fromLogGroupName(this, `${logGroupName.replace(/\//g, '-')}-Existing`, logGroupName);
-      } catch {
-        new logs.LogGroup(this, `${logGroupName.replace(/\//g, '-')}-LogGroup`, {
-          logGroupName: logGroupName,
-          retention: logs.RetentionDays.FIVE_YEARS,
-          removalPolicy: RemovalPolicy.RETAIN,
-        });
-      }
-    }
 
     // ----------コンポーネント設定----------
 
