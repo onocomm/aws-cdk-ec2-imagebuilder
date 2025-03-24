@@ -22,6 +22,7 @@
       "ImageCreate": false,
       "Architecture": "arm64",
       "SESCredentials": "SESCredentials20250319",
+      "LogRemoval": true,
       "AdminUserCreate": true
     },
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,

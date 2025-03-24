@@ -15,6 +15,7 @@ interface CdkStackProps extends StackProps {
   VpcId: string;
   SESCredentials: string;
   Architecture: string;
+  LogRemoval: boolean;
   AdminUserCreate: boolean;
 }
 
@@ -32,6 +33,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
       ImageCreate,
       SESCredentials,
       Architecture,
+      LogRemoval,
       AdminUserCreate,
     } = props;
 
@@ -49,7 +51,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
         new logs.LogGroup(this, `${logGroupName.replace(/\//g, '-')}-LogGroup`, {
           logGroupName: logGroupName,
           retention: logs.RetentionDays.FIVE_YEARS,
-          removalPolicy: RemovalPolicy.DESTROY,
+          removalPolicy: LogRemoval ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
         });
 
       }
