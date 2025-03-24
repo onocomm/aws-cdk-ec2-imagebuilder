@@ -1,4 +1,5 @@
 import { Stack, StackProps, RemovalPolicy, CfnOutput } from 'aws-cdk-lib';
+import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as imagebuilder from 'aws-cdk-lib/aws-imagebuilder';
@@ -35,6 +36,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
       SESCredentials,
       Architecture,
       AdminUserCreate,
+      SESEnable,
     } = props;
 
     // ----------SSMパラメータ設定----------
@@ -44,6 +46,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
       .replace(/\${ResourceName}/g, ResourceName)
       .replace(/\${SESCredentials}/g, SESCredentials)
       .replace(/\${AdminUserCreate}/g, AdminUserCreate ? 'true' : 'false')
+      .replace(/\${SESEnable}/g, SESEnable ? 'true' : 'false')
       .replace(/\${Account}/g, props.env?.account || '')
       .replace(/\${Region}/g, props.env?.region || '');
 
@@ -65,12 +68,29 @@ export class CdkEc2ImageBuilderStack extends Stack {
       `/${ResourceName}/maillog`,
       `/aws/imagebuilder/${ResourceName}`,
     ]){
+
+      // ✅ AWS SDK を利用して LogGroup の存在を確認
+      const logGroupExists = new AwsCustomResource(this, 'CheckLogGroup', {
+        onUpdate: {
+          service: 'CloudWatchLogs',
+          action: 'describeLogGroups',
+          parameters: {
+            logGroupNamePrefix: logGroupName,
+          },
+          physicalResourceId: PhysicalResourceId.of(logGroupName),
+        },
+        policy: AwsCustomResourcePolicy.fromSdkCalls({ resources: AwsCustomResourcePolicy.ANY_RESOURCE }),
+      });
+
       // ✅ 既存の LogGroup を参照し、なければ新規作成
-      new logs.LogGroup(this, `${logGroupName.replaceAll('/', '')}LogGroup`, {
+      const logGroup = new logs.LogGroup(this, `${logGroupName.replaceAll('/', '')}LogGroup`, {
         logGroupName: logGroupName,
         retention: logs.RetentionDays.FIVE_YEARS, // ✅ 5年間のログを保持
         removalPolicy: RemovalPolicy.RETAIN
       });
+
+      // 🚀 `logGroupExists` の結果に依存するよう設定（順番制御）
+      logGroup.node.addDependency(logGroupExists);
     }
 
     // ----------コンポーネント設定----------
@@ -80,6 +100,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
       .replace(/\${ResourceName}/g, ResourceName)
       .replace(/\${SESCredentials}/g, SESCredentials)
       .replace(/\${AdminUserCreate}/g, AdminUserCreate ? 'true' : 'false')
+      .replace(/\${SESEnable}/g, SESEnable ? 'true' : 'false')
       .replace(/\${Account}/g, props.env?.account || '')
       .replace(/\${Region}/g, props.env?.region || '');
 
