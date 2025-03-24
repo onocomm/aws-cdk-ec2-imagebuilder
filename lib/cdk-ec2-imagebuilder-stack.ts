@@ -1,4 +1,4 @@
-import { Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
+import { Stack, StackProps, CfnOutput, RemovalPolicy } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as imagebuilder from 'aws-cdk-lib/aws-imagebuilder';
@@ -49,6 +49,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
         new logs.LogGroup(this, `${logGroupName.replace(/\//g, '-')}-LogGroup`, {
           logGroupName: logGroupName,
           retention: logs.RetentionDays.FIVE_YEARS,
+          removalPolicy: RemovalPolicy.DESTROY,
         });
 
       }
