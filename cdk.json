@@ -17,14 +17,6 @@
     ]
   },
   "context": {
-    "production": {
-      "ResourceName": "cdk-ec2-imagebuilder",
-      "ImageCreate": false,
-      "Architecture": "arm64",
-      "SESCredentials": "SESCredentials20250319",
-      "LogRemoval": true,
-      "AdminUserCreate": true
-    },
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/core:target-partitions": [

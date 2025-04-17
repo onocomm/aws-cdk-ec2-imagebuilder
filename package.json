@@ -1,5 +1,5 @@
 {
-  "name": "cdk-ec2-imagebuilder",
+  "name": "aws-cdk-ec2-imagebuilder",
   "version": "0.1.0",
   "bin": {
     "cdk-test-ec2": "bin/cdk-ec2-imagebuilder.js"

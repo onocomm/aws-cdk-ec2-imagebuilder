@@ -8,34 +8,20 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Construct } from 'constructs';
 
-// カスタムプロパティの型を定義
-interface CdkStackProps extends StackProps {
-  ResourceName: string;
-  ImageCreate: boolean;
-  VpcId: string;
-  SESCredentials: string;
-  Architecture: string;
-  LogRemoval: boolean;
-  AdminUserCreate: boolean;
-}
-
 export class CdkEc2ImageBuilderStack extends Stack {
-  constructor(scope: Construct, id: string, props?: CdkStackProps) {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // ✅ props が undefined の場合、エラーを回避
-    if (!props) {
-      throw new Error('props is required for CdkEc2ImageBuilderStack');
-    }
-    
-    const {
-      ResourceName,
-      ImageCreate,
-      SESCredentials,
-      Architecture,
-      LogRemoval,
-      AdminUserCreate,
-    } = props;
+    // ----------環境変数設定----------
+
+    // ✅ 環境変数を設定
+    const ResourceName = "aws-cdk-ec2-imagebuilder";
+    const Region = props?.env?.region || 'ap-northeast-1';
+    const ImageCreate = false;
+    const Architecture = "arm64";
+    const SESCredentials = "SESCredentials20250319";
+    const LogRemoval = true;
+    const AdminUserCreate = true;
 
     // ----------CloudWatch Logs設定----------
 
@@ -48,13 +34,13 @@ export class CdkEc2ImageBuilderStack extends Stack {
       `/aws/imagebuilder/${ResourceName}`,
     ]){
 
-        new logs.LogGroup(this, `${logGroupName.replace(/\//g, '-')}-LogGroup`, {
-          logGroupName: logGroupName,
-          retention: logs.RetentionDays.FIVE_YEARS,
-          removalPolicy: LogRemoval ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
-        });
+      new logs.LogGroup(this, `${logGroupName.replace(/\//g, '-')}-LogGroup`, {
+        logGroupName: logGroupName,
+        retention: logs.RetentionDays.FIVE_YEARS,
+        removalPolicy: LogRemoval ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
+      });
 
-      }
+    }
     
     // ----------SSMパラメータ設定----------
 
@@ -63,8 +49,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
       .replace(/\${ResourceName}/g, ResourceName)
       .replace(/\${SESCredentials}/g, SESCredentials)
       .replace(/\${AdminUserCreate}/g, AdminUserCreate ? 'true' : 'false')
-      .replace(/\${Account}/g, props.env?.account || '')
-      .replace(/\${Region}/g, props.env?.region || '');
+      .replace(/\${Region}/g, Region);
 
     // ✅ SSM パラメータを作成
     new ssm.StringParameter(this, 'CloudWatchAgentConfigParameter', {
@@ -81,8 +66,7 @@ export class CdkEc2ImageBuilderStack extends Stack {
       .replace(/\${ResourceName}/g, ResourceName)
       .replace(/\${SESCredentials}/g, SESCredentials)
       .replace(/\${AdminUserCreate}/g, AdminUserCreate ? 'true' : 'false')
-      .replace(/\${Account}/g, props.env?.account || '')
-      .replace(/\${Region}/g, props.env?.region || '');
+      .replace(/\${Region}/g, Region);
 
     // ✅ ImageBuilder用のコンポーネントを作成
     const component = new imagebuilder.CfnComponent(this, 'InstallComponent', {

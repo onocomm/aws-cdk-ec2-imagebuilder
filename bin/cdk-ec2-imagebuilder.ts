@@ -2,20 +2,11 @@
 import * as cdk from 'aws-cdk-lib';
 import { CdkEc2ImageBuilderStack } from '../lib/cdk-ec2-imagebuilder-stack';
 
-const envName = process.env.CDK_ENV || 'production';
-
 const app = new cdk.App();
-const config = app.node.tryGetContext(envName);
 
-if (!config) {
-  throw new Error(`Environment ${envName} is not defined in cdk.json`);
-}
-
-new CdkEc2ImageBuilderStack(app, `CdkEc2ImageBuilderStack-${config.ResourceName}`, {
-  ...config,
+new CdkEc2ImageBuilderStack(app, `CdkEc2ImageBuilderStack`, {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,
-    profile: process.env.AWS_PROFILE,
   }
 });
